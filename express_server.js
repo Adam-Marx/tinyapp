@@ -35,38 +35,53 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+//BASIC HELLO WORLD
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//URLS INDEX/TABLE PAGE
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
+//DELETE URL
+app.post('/urls/:shortURL/delete', (req, res) => {
+  const shortURL = req.params.shortURL
+  delete urlDatabase[shortURL];
+  res.redirect('/urls')
+});
+
+//NEW URLS
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL; 
-  const randomId = generateRandomString();
-  urlDatabase[randomId] = longURL;
-  res.redirect(`/urls/${randomId}`);
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
-app.get("/u/:id", (req, res) => {
-  const idInObject = req.params.id
-  const longURL = urlDatabase[idInObject];
+app.post('/urls')
+
+//SHORT URL LINK TO ORIGINAL LONGURL WEBSITE
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
 });
 
-app.get("/urls/:id", (req, res) => {
-  const idInObject = req.params.id
-  const templateVars = { id: idInObject, longURL: urlDatabase[idInObject] };
+//SHORT URL LINK
+app.get("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL] };
   res.render("urls_show", templateVars);
 });
 
+//LISTEN
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

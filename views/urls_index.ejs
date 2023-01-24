@@ -30,14 +30,16 @@
         </thead>
         <tbody>
           <% for (let id in urls) { %>
-            <form method="POST" action='/urls/<%= id %>/delete'></form>
             <tr>
               <td><%= id %> </td> 
-              <td><%= urls[id] %></td> <td> 
-              <button type="submit" class="btn btn-primary" style="background-color:white;border-color:red;color:red;" class="btn btn-primary">Delete</button> </td>
+              <td><%= urls[id] %></td> 
+              <td> 
+                <form method="POST" action='/urls/<%= id %>/delete'>
+                <button type="submit" class="btn btn-primary" style="background-color:white;border-color:red;color:red;" class="btn btn-primary">Delete</button>
+                </form>
+              </td>
             </tr>
           <% } %>
-        </form>
         </tbody>
       </table>
       <a href="#">Shorten a new URL</a>
