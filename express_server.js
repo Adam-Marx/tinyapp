@@ -14,7 +14,7 @@ app.use(morgan('dev'));
 function  generateRandomString() {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
-  for (let i = 7; i > 0; --i) {
+  for (let i = 6; i > 0; --i) {
     result += chars[Math.floor(Math.random() * chars.length)];
   }
   return result;
@@ -49,13 +49,19 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const longURL = req.body.longURL; 
+  const randomId = generateRandomString();
+  urlDatabase[randomId] = longURL;
+  res.redirect(`/urls/${randomId}`);
+});
+
+app.get("/u/:id", (req, res) => {
+  const idInObject = req.params.id
+  const longURL = urlDatabase[idInObject];
+  res.redirect(longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
-  console.log('req:', req);
-  console.log('req params:', req.params);
   const idInObject = req.params.id
   const templateVars = { id: idInObject, longURL: urlDatabase[idInObject] };
   res.render("urls_show", templateVars);
@@ -64,3 +70,5 @@ app.get("/urls/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+console.log('urlDatabase:', urlDatabase)
