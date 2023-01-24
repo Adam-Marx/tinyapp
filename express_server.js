@@ -3,7 +3,14 @@ const morgan = require('morgan');
 const app = express();
 const PORT = 8080; // default port 8080
 
+
+// set the view engine to ejs
 app.use(morgan('dev'));
+
+// use res.render to load up an ejs view file
+
+// index page
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
