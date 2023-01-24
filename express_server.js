@@ -11,7 +11,7 @@ app.use(morgan('dev'));
 
 // index page
 
-function randomString() {
+function  generateRandomString() {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
   for (let i = 7; i > 0; --i) {
