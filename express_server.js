@@ -4,7 +4,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 
 
-// set the view engine to ejs
+app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
 // use res.render to load up an ejs view file
