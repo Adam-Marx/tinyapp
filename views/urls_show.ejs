@@ -20,6 +20,9 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= shortURL %>"><%= shortURL %></a>
         </p>
+        <form method="POST" action='/urls/<%= shortURL %>/update'>
+          <button type="submit" class="btn btn-primary" style="background-color:blue;border-color:black;color:white;" class="btn btn-primary">Update</button>
+          </form>
       </div>
       <div class="card-footer text-muted"></div>
     </div>

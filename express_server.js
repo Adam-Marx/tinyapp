@@ -65,7 +65,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post('/urls')
+// app.post('/urls')
 
 //SHORT URL LINK TO ORIGINAL LONGURL WEBSITE
 app.get("/u/:shortURL", (req, res) => {
