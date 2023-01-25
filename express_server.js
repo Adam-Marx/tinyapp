@@ -40,13 +40,22 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//EDIT URLS
+  app.post('/urls/:shortURL', (req, res) => {
+    const shortURL = req.params.shortURL;
+    const newLongURL = req.body.longURL;
+    urlDatabase[shortURL] = newLongURL;
+    res.redirect('/urls');
+  });
+
+
 //URLS INDEX/TABLE PAGE
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
-//DELETE URL
+//DELETE URLS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL
   delete urlDatabase[shortURL];
@@ -65,7 +74,6 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// app.post('/urls')
 
 //SHORT URL LINK TO ORIGINAL LONGURL WEBSITE
 app.get("/u/:shortURL", (req, res) => {
@@ -85,5 +93,3 @@ app.get("/urls/:shortURL", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-console.log('urlDatabase:', urlDatabase)
