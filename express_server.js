@@ -7,9 +7,9 @@ const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
-// use res.render to load up an ejs view file
 
-// index page
+
+// INDEX PAGE
 
 function  generateRandomString() {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -38,6 +38,14 @@ app.get("/urls.json", (req, res) => {
 //BASIC HELLO WORLD
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+//LOGIN
+
+app.post('/login', (req, res) => {
+  const nameInput = req.body.username
+  res.cookie('username', nameInput);
+  res.redirect('/urls');
 });
 
 //EDIT URLS
