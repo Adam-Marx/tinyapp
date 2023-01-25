@@ -1,6 +1,8 @@
 const express = require("express");
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser')
 const app = express();
+app.use(cookieParser())
 const PORT = 8080; // default port 8080
 
 
@@ -59,7 +61,7 @@ app.post('/login', (req, res) => {
 
 //URLS INDEX/TABLE PAGE
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { username: req.cookies["username"], urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
@@ -93,7 +95,9 @@ app.get("/u/:shortURL", (req, res) => {
 //SHORT URL LINK
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
-  const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL] };
+  const templateVars = { username: req.cookies["username"], 
+                         shortURL: shortURL, 
+                         longURL: urlDatabase[shortURL] };
   res.render("urls_show", templateVars);
 });
 
