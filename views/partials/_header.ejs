@@ -27,5 +27,9 @@
       />
       <button type="submit" class="btn btn-primary" style="background-color:rgb(22, 131, 204);border-color:black;color:white;" class="btn btn-primary">Login</button>
     </div>
-  </form>        
+  </form>  
+    <% if (username) { %>
+      <p>Logged in as: <%= username %>
+    <% } %>
+    
 </header>
