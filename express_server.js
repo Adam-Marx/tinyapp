@@ -1,15 +1,17 @@
 const express = require("express");
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser')
 const app = express();
+app.use(cookieParser())
 const PORT = 8080; // default port 8080
 
 
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
 
-// use res.render to load up an ejs view file
 
-// index page
+
+// INDEX PAGE
 
 function  generateRandomString() {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -40,6 +42,21 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+//LOGIN
+
+app.post('/login', (req, res) => {
+  const nameInput = req.body.username;
+  res.cookie('username', nameInput);
+  res.redirect('/urls');
+});
+
+//LOGOUT
+
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
 //EDIT URLS
   app.post('/urls/:shortURL', (req, res) => {
     const shortURL = req.params.shortURL;
@@ -51,7 +68,7 @@ app.get("/hello", (req, res) => {
 
 //URLS INDEX/TABLE PAGE
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { username: req.cookies["username"], urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
@@ -64,7 +81,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 //NEW URLS
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { 
+                        username: req.cookies["username"], 
+                      };
+  res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -85,7 +105,11 @@ app.get("/u/:shortURL", (req, res) => {
 //SHORT URL LINK
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
-  const templateVars = { shortURL: shortURL, longURL: urlDatabase[shortURL] };
+  const templateVars = { 
+                        username: req.cookies["username"], 
+                        shortURL: shortURL, 
+                        longURL: urlDatabase[shortURL] 
+                      };
   res.render("urls_show", templateVars);
 });
 
