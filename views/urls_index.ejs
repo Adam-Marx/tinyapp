@@ -33,7 +33,7 @@
             <tr>
               <td><%= shortURL %> </td> 
               <td><%= urls[shortURL] %></td> 
-              <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:blue;">Edit</button></a></td>
+              <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:blue;height:40px;width:80px;">Edit</button></a></td>
               <td> 
                 <form method="POST" action='/urls/<%= shortURL %>/delete'>
                 <button type="submit" class="btn btn-primary" style="background-color:white;border-color:red;color:red;" class="btn btn-primary">Delete</button>
