@@ -34,13 +34,14 @@ const users = {
 };
 
 const userLookUp = (email) => {
-  foundUser = null;
+  let foundUser = null;
   for (const user in users) {
     const userID = users[user]
     if(userID.email === email) {
       return foundUser = userID;
     } 
   }
+  return foundUser;
 };
 
 const generateRandomString = (length) => {
@@ -70,13 +71,20 @@ app.get("/hello", (req, res) => {
 
 //REGISTER
 app.get('/register', (req, res) => {
-  res.render('register');
+  const user = req.cookies.user_id
+  const newUser = users[user];
+  const templateVars = {
+    user_id: newUser,
+    urls: urlDatabase
+  };
+  res.render('register', templateVars);
 })
 
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const randomID = generateRandomString(4);
+  const user = userLookUp(email);
   const newUser = {
     id: randomID,
     email: email,
@@ -87,28 +95,55 @@ app.post('/register', (req, res) => {
     return res.status(400).send('Please enter a valid email and password.');
   }
 
-  if(userLookUp(email)) {
+
+  if(user) {
     return res.status(400).send('That email is already in use. Please choose a different one.')
   }
 
   users[randomID] = newUser;
-  res.cookie('user_id', randomID);
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 //LOGIN
 
+app.get('/login', (req, res) => {
+  const user = req.cookies.user_id
+  const newUser = users[user];
+  const templateVars = {
+    user_id: newUser,
+    urls: urlDatabase
+  };
+  res.render('login', templateVars);
+});
+
 app.post('/login', (req, res) => {
-  const nameInput = req.body.user_id;
-  res.cookie('username', nameInput);
-  res.redirect('/urls');
+    const email = req.body.email;
+    const password = req.body.password;
+    const user = userLookUp(email);
+  
+    if (email === '' || password === '') {
+      return res.status(400).send('Please enter a valid email and password.');
+    }
+
+    if (!user) {
+      return res.status(403).send('An account corresponding to that email address could not be found.');
+    } 
+
+    if (user) {
+      if (user.password !== password) {
+        return res.status(403).send('The password provided does not match.')
+      } else if (user.password === password) {
+        res.cookie('user_id', user.id);
+        res.redirect('/urls');
+      }
+    }
 });
 
 //LOGOUT
 
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 //EDIT URLS
@@ -128,7 +163,6 @@ app.get('/urls', (req, res) => {
     user_id: newUser,
     urls: urlDatabase
   };
-  console.log(newUser);
   res.render('urls_index', templateVars);
 });
 

@@ -17,27 +17,20 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-    </div>
-  </nav>
-
-  
-    <% if (user_id) { %>
-      <p>Logged in as: <%= user_id.email %></p> 
+           
+    <% if (!user_id) { %>
+    <a class="nav-item nav-link" href="/login">Login</a>
+    <% } else if (user_id) {%>
+    <p style="text-align:center">Logged in as: <%= user_id.email %></p>
     <form method="POST" action='/logout'>
         <button type="submit" class="btn btn-primary" 
         style="background-color:rgb(209, 4, 4);border-color:black;color:white;" 
         class="btn btn-primary">Logout</button>
-      </div>
     </form>  
-    <% } else { %>
-      <form method="POST" action='/login'>
-        <div class="form-group mb-2">
-          <label for="username">Username:</label>
-          <input
-            name="username"
-          />
-          <button type="submit" class="btn btn-primary" style="background-color:rgb(22, 131, 204);border-color:black;color:white;" class="btn btn-primary">Login</button>
-        </div>
-      </form>  
-    <% } %>
+    <% }  %>
+        
+        <a class="nav-item nav-link" href="/register">Register</a>
+      </div>
+    </div>
+  </nav>
 </header>
