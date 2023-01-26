@@ -77,6 +77,11 @@ app.get('/register', (req, res) => {
     user_id: newUser,
     urls: urlDatabase
   };
+
+  if (newUser) {
+    res.redirect('/urls')
+  }
+
   res.render('register', templateVars);
 })
 
@@ -90,6 +95,7 @@ app.post('/register', (req, res) => {
     email: email,
     password: password
   };
+  
 
   if (email === '' || password === '') {
     return res.status(400).send('Please enter a valid email and password.');
@@ -113,6 +119,11 @@ app.get('/login', (req, res) => {
     user_id: newUser,
     urls: urlDatabase
   };
+
+  if (newUser) {
+    res.redirect('/urls')
+  }
+
   res.render('login', templateVars);
 });
 
@@ -178,14 +189,28 @@ app.get("/urls/new", (req, res) => {
   const user = req.cookies.user_id
   const newUser = users[user];
   const templateVars = {
-    user_id: newUser
+    user_id: newUser,
+    urls: urlDatabase
   };
-  res.render("urls_new", templateVars);
+  
+  if (!newUser) {
+    res.redirect("/login");
+    return;
+  }
+  res.render('urls_new', templateVars);
 });
 
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
+  const user = req.cookies.user_id
+  const newUser = users[user];
+
+  if (!newUser) {
+    res.send("<html><body><h1>Error</h1><p>You must be logged in to shorten URLs.</p></body></html>");
+    return;
+  }
+
   urlDatabase[shortURL] = longURL;
   res.redirect(`/urls/${shortURL}`);
 });
@@ -208,6 +233,12 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL],
   };
+
+  if (!urlDatabase[shortURL]) {
+    res.send("<html><body><h1>Error</h1><p>Error, not a valid shortned URL/id.</p></body></html>");
+    return;
+  }
+
   res.render("urls_show", templateVars);
 });
 
