@@ -1,16 +1,23 @@
 const express = require("express");
 const morgan = require('morgan');
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+
+
+
+
+
 const app = express();
 const PORT = 8080; // default port 8080
 
 //MIDDLEWARE
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
-app.use(cookieParser())
-app.use(express.urlencoded({ extended: false }))
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 
-
+//HELPERS
+// const { userLookUp, generateRandomString } = require('./helper');
 
 
 //DATABASES
@@ -26,6 +33,8 @@ const urlDatabase = {
   },
 };
 
+
+
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -39,6 +48,7 @@ const users = {
   },
 };
 
+//COMPARE BY EMAIL HELPER
 const userLookUp = (email) => {
   let foundUser = null;
   for (const user in users) {
@@ -50,6 +60,7 @@ const userLookUp = (email) => {
   return foundUser;
 };
 
+//RANDOM STRING HELPER
 const generateRandomString = (length) => {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
@@ -59,8 +70,19 @@ const generateRandomString = (length) => {
   return result;
 };
 
+//SPECIFIC URLS FOR USER
+function urlsForUser(userID) {
+  let filteredUrls = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === userID) {
+      filteredUrls[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return filteredUrls;
+};
 
-app.use(express.urlencoded({ extended: true }));
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -78,13 +100,13 @@ app.get("/hello", (req, res) => {
 //REGISTER
 app.get('/register', (req, res) => {
   const user = req.cookies.user_id
-  const newUser = users[user];
+  const userID = users[user];
   const templateVars = {
-    user_id: newUser,
+    user_id: userID,
     urls: urlDatabase
   };
 
-  if (newUser) {
+  if (userID) {
     res.redirect('/urls')
   }
 
@@ -96,7 +118,7 @@ app.post('/register', (req, res) => {
   const password = req.body.password;
   const randomID = generateRandomString(4);
   const user = userLookUp(email);
-  const newUser = {
+  const userID = {
     id: randomID,
     email: email,
     password: password
@@ -112,7 +134,7 @@ app.post('/register', (req, res) => {
     return res.status(400).send('That email is already in use. Please choose a different one.')
   }
 
-  users[randomID] = newUser;
+  users[randomID] = userID;
   res.redirect('/login');
 });
 
@@ -120,13 +142,13 @@ app.post('/register', (req, res) => {
 
 app.get('/login', (req, res) => {
   const user = req.cookies.user_id
-  const newUser = users[user];
+  const userID = users[user];
   const templateVars = {
-    user_id: newUser,
+    user_id: userID,
     urls: urlDatabase
   };
 
-  if (newUser) {
+  if (userID) {
     res.redirect('/urls')
   }
 
@@ -167,7 +189,21 @@ app.post('/logout', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
-  urlDatabase[shortURL] = newLongURL;
+  const user = req.cookies.user_id
+  const userID = users[user]
+
+  if (!userID) {
+    res.send("Error: You must be logged in to edit URLs.");
+    return;
+  }
+
+  if (userID !== urlDatabase[shortURL].userID) {
+    res.send("Error: You do not have access to edit this URL.");
+    return;
+  }
+
+
+  urlDatabase[shortURL].longURL = newLongURL;
   res.redirect('/urls');
 });
 
@@ -175,17 +211,41 @@ app.post('/urls/:shortURL', (req, res) => {
 //URLS INDEX/TABLE PAGE
 app.get('/urls', (req, res) => {
   const user = req.cookies.user_id
-  const newUser = users[user];
+  const userID = users[user];
   const templateVars = {
-    user_id: newUser,
+    user_id: userID,
     urls: urlDatabase
   };
+
+  if (!userID) {
+    return res.send('Login to view your URLs.');
+    
+  }
   res.render('urls_index', templateVars);
 });
 
 //DELETE URLS
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const shortURL = req.params.shortURL
+  const shortURL = req.params.shortURL;
+  const newLongURL = req.body.longURL;
+  const user = req.cookies.user_id
+  const userID = users[user]
+
+  if (!userID) {
+    res.send("Error: You must be logged in to edit URLs.");
+    return;
+  }
+
+  if (userID !== urlDatabase[shortURL].userID) {
+    res.send("Error: You do not have access to delete this URL.");
+    return;
+  }
+  const userURLs = urlsForUser(user);
+  
+  if (!userURLs[shortURL]) {
+    return res.send('You do not have access to one or more URLs.');
+  }
+  
   delete urlDatabase[shortURL];
   res.redirect('/urls')
 });
@@ -193,13 +253,13 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 //NEW URLS
 app.get("/urls/new", (req, res) => {
   const user = req.cookies.user_id
-  const newUser = users[user];
+  const userID = users[user];
   const templateVars = {
-    user_id: newUser,
+    user_id: userID,
     urls: urlDatabase
   };
   
-  if (!newUser) {
+  if (!userID) {
     res.redirect("/login");
     return;
   }
@@ -209,15 +269,14 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
-  const user = req.cookies.user_id
-  const newUser = users[user];
+  const userID = req.cookies.user_id
 
-  if (!newUser) {
+
+  if (!userID) {
     res.send("<html><body><h1>Error</h1><p>You must be logged in to shorten URLs.</p></body></html>");
     return;
   }
-
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = { longURL, userID };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -232,19 +291,29 @@ app.get("/u/:shortURL", (req, res) => {
 //SHORT URL LINK
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.cookies.user_id
-  const newUser = users[user];
   const shortURL = req.params.shortURL
-  const templateVars = {
-    user_id: newUser,
-    shortURL: shortURL,
-    longURL: urlDatabase[shortURL].longURL,
-  };
+  const longURL = urlDatabase[shortURL].longURL
 
   if (!urlDatabase[shortURL]) {
-    res.send("<html><body><h1>Error</h1><p>Error, not a valid shortned URL/id.</p></body></html>");
-    return;
+    return res.send("<html><body><h1>Error</h1><p>Error, not a valid shortened URL/id.</p></body></html>");
   }
 
+  if (!user) {
+  return res.send("<html><body><h1>Error</h1><p>Error, you must be logged in to access this page.</p></body></html>"); 
+  }
+
+  const userURLs = urlsForUser(user);
+
+  if (!userURLs[shortURL]) {
+    return res.send('You do not have access to one or more URLs.');
+  }
+ 
+  const templateVars = {
+    user_id: user,
+    shortURL: shortURL,
+    urls: urlDatabase,
+    longURL: longURL
+  };
   res.render("urls_show", templateVars);
 });
 
