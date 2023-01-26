@@ -14,7 +14,7 @@
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
-    <title>TinyApp</title>
+    <title> - My URLs</title>
   </head>
   
   <body>
@@ -34,12 +34,18 @@
               <td><%= shortURL %> </td> 
               <td><%= urls[shortURL] %></td> 
 <<<<<<< HEAD
+<<<<<<< HEAD
               <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:white;color:blue;border-color:blue">Edit</button></a></td>
 =======
 
               <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:white;color:blue;border-color:blue">Edit</button></a></td>
               <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:blue;height:40px;width:80px;">Edit</button></a></td>
 >>>>>>> 82c972f9d7a3e3d99bc1b6b95082985299be0cd2
+=======
+
+              <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:white;color:blue;border-color:blue">Edit</button></a></td>
+              <td><a href="/urls/<%=shortURL%>""> <button class="btn btn-success" style="background-color:blue;height:40px;width:80px;">Edit</button></a></td>
+>>>>>>> cd03d3fb2859edd7d3a1697be0196b104258c905
               <td> 
                 <form method="POST" action='/urls/<%= shortURL %>/delete'>
                 <button type="submit" class="btn btn-primary" style="background-color:white;border-color:red;color:red;" class="btn btn-primary">Delete</button>
