@@ -16,8 +16,14 @@ app.use(express.urlencoded({ extended: false }))
 //DATABASES
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -219,7 +225,7 @@ app.post("/urls", (req, res) => {
 //SHORT URL LINK TO ORIGINAL LONGURL WEBSITE
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -231,7 +237,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     user_id: newUser,
     shortURL: shortURL,
-    longURL: urlDatabase[shortURL],
+    longURL: urlDatabase[shortURL].longURL,
   };
 
   if (!urlDatabase[shortURL]) {
