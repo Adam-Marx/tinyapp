@@ -21,8 +21,8 @@
   </nav>
 
   
-    <% if (username) { %>
-      <p>Logged in as: <%= username %></p> 
+    <% if (user_id) { %>
+      <p>Logged in as: <%= user_id.email %></p> 
     <form method="POST" action='/logout'>
         <button type="submit" class="btn btn-primary" 
         style="background-color:rgb(209, 4, 4);border-color:black;color:white;" 
