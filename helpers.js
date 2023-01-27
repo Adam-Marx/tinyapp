@@ -21,11 +21,11 @@ const generateRandomString = (length) => {
 };
 
 //SPECIFIC URLS FOR USER HELPER
-const urlsForUser = (user) => {
+const urlsForUser = (user, database) => {
   let filteredUrls = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === user) {
-      filteredUrls[shortURL] = urlDatabase[shortURL];
+  for (const shortURL in database) {
+    if (database[shortURL].userID === user) {
+      filteredUrls[shortURL] = database[shortURL];
     }
   }
   return filteredUrls;
@@ -33,4 +33,4 @@ const urlsForUser = (user) => {
 
 
 
-// module.exports = { userLookUp, generateRandomString, urlsForUser };
+module.exports = { userLookUp, generateRandomString, urlsForUser };

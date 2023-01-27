@@ -1,11 +1,8 @@
+//MODULES
 const express = require("express");
 const morgan = require('morgan');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-
-
-
-
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -21,11 +18,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: true }));
 
 //HELPERS
-// const { userLookUp, generateRandomString } = require('./helper');
+const { userLookUp, generateRandomString, urlsForUser } = require('./helpers');
 
 
 //DATABASES
-
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -49,42 +45,6 @@ const users = {
     password: "pw2",
   },
 };
-
-
-//COMPARE BY EMAIL HELPER
-const userLookUp = (email, database) => {
-  let foundUser = null;
-  for (const user in database) {
-    const userID = database[user]
-    if(userID.email === email) {
-      return foundUser = userID;
-    } 
-  }
-  return foundUser;
-};
-
-//RANDOM STRING HELPER
-const generateRandomString = (length) => {
-  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let result = '';
-  for (let i = length; i > 0; --i) {
-    result += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return result;
-};
-
-//SPECIFIC URLS FOR USER HELPER
-const urlsForUser = (user) => {
-  let filteredUrls = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === user) {
-      filteredUrls[shortURL] = urlDatabase[shortURL];
-    }
-  }
-  return filteredUrls;
-};
-
-
 
 //HELLO
 app.get("/", (req, res) => {
@@ -128,18 +88,18 @@ app.post('/register', (req, res) => {
     email: email,
     password: hashedPassword
   };
-  
+
 
   if (email === '' || password === '') {
     return res.status(400).send('Please enter a valid email and password.');
   }
 
 
-  if(user) {
+  if (user) {
     return res.status(400).send('That email is already in use. Please choose a different one.')
   }
 
-  
+
 
   users[randomID] = userID;
   res.redirect('/login');
@@ -163,31 +123,31 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    const user = userLookUp(email, users);
-    const hashedPassword = bcrypt.hashSync(password, 10);
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = userLookUp(email, users);
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
-    if (email === '' || password === '') {
-      return res.status(400).send('Please enter a valid email and password.');
+  if (email === '' || password === '') {
+    return res.status(400).send('Please enter a valid email and password.');
+  }
+
+  if (!user) {
+    return res.status(403).send('An account corresponding to that email address could not be found.');
+  }
+
+
+
+  if (user) {
+    if (!bcrypt.compareSync(password, hashedPassword)) {
+      return res.status(403).send('The password provided does not match.')
+    } else if (bcrypt.compareSync(password, hashedPassword)) {
+      req.session.user_id = user.id
+      res.redirect('/urls');
     }
+  }
 
-    if (!user) {
-      return res.status(403).send('An account corresponding to that email address could not be found.');
-    } 
 
-   
-
-    if (user) {
-      if (!bcrypt.compareSync(password, hashedPassword)) {
-        return res.status(403).send('The password provided does not match.')
-      } else if (bcrypt.compareSync(password, hashedPassword)) {
-        req.session.user_id = user.id
-        res.redirect('/urls');
-      }
-    }
-
-  
 });
 
 //LOGOUT
@@ -202,25 +162,22 @@ app.post('/logout', (req, res) => {
 //DELETE URLS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
-  const newLongURL = req.body.longURL;
   const user = req.session.user_id
   const userID = users[user]
+  const userURLs = urlsForUser(user, urlDatabase);
+  console.log(userURLs);
+  console.log(shortURL);
 
   if (!userID) {
     res.send("Error: You must be logged in to edit URLs.");
     return;
   }
 
-  if (userID !== urlDatabase[shortURL].userID) {
-    res.send("Error: You do not have access to delete this URL.");
-    return;
-  }
-  const userURLs = urlsForUser(user);
-  
   if (!userURLs[shortURL]) {
-    return res.send('You do not have access to one or more URLs.');
+    return res.send('You do not have access to this URL.');
   }
-  
+
+
   delete urlDatabase[shortURL];
   res.redirect('/urls')
 });
@@ -233,7 +190,7 @@ app.get("/urls/new", (req, res) => {
     user_id: userID,
     urls: urlDatabase
   };
-  
+
   if (!userID) {
     res.redirect("/login");
     return;
@@ -268,21 +225,22 @@ app.get("/urls/:shortURL", (req, res) => {
   const user = req.session.user_id
   const shortURL = req.params.shortURL
   const longURL = urlDatabase[shortURL].longURL
-  const userURLs = urlsForUser(user);
+  const userURLs = urlsForUser(user, urlDatabase);
 
   if (!urlDatabase[shortURL]) {
     return res.send("<html><body><h1>Error</h1><p>Error, not a valid shortened URL/id.</p></body></html>");
   }
 
   if (!user) {
-  return res.send("<html><body><h1>Error</h1><p>Error, you must be logged in to access this page.</p></body></html>"); 
+    return res.send("<html><body><h1>Error</h1><p>Error, you must be logged in to access this page.</p></body></html>");
   }
 
-  
+  console.log(userURLs);
+  console.log(shortURL);
   if (!userURLs[shortURL]) {
-    return res.send('You do not have access to this URLs.');
+    return res.send('You do not have access to this URL.');
   }
- 
+
   const templateVars = {
     user_id: user,
     shortURL: shortURL,
@@ -297,9 +255,9 @@ app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
   const user = req.session.user_id
-  const userURLs = urlsForUser(user);
-  
- 
+  const userURLs = urlsForUser(user, urlDatabase);
+
+
 
   if (!user) {
     res.send("Error: You must be logged in to edit URLs.");
@@ -329,7 +287,7 @@ app.get('/urls', (req, res) => {
 
   if (!userID) {
     return res.send('Login to view your URLs.');
-    
+
   }
   res.render('urls_index', templateVars);
 });
