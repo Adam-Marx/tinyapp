@@ -10,12 +10,12 @@ const PORT = 8080; // default port 8080
 //MIDDLEWARE
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
+app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['hgropiumvheoihm984c3q0ymteagnf', 'yu632n9-8vmhuxscgckpmeodgcjhpoieslhx-8']
 }));
-app.use(express.urlencoded({ extended: false }));
-app.use(express.urlencoded({ extended: true }));
 
 //HELPERS
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
