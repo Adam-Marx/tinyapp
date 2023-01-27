@@ -1,5 +1,5 @@
 //COMPARE BY EMAIL HELPER
-const userLookUp = (email, database) => {
+const getUserByEmail = (email, database) => {
   let foundUser = null;
   for (const user in database) {
     const userID = database[user]

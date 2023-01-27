@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: true }));
 
 //HELPERS
-const { userLookUp, generateRandomString, urlsForUser } = require('./helpers');
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 
 //DATABASES
@@ -80,7 +80,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const randomID = generateRandomString(4);
-  const user = userLookUp(email, users);
+  const user = getUserByEmailUp(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   const userID = {
@@ -125,7 +125,7 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = userLookUp(email, users);
+  const user = getUserByEmailUp(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === '' || password === '') {
