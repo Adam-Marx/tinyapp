@@ -229,8 +229,6 @@ app.get("/urls/:shortURL", (req, res) => {
     return res.send("<html><body><h1>Error</h1><p>Error: You must be logged in to access this page.</p></body></html>");
   }
 
-  console.log(userURLs);
-  console.log(shortURL);
   if (!userURLs[shortURL]) {
     return res.send('<html><body><h1>Error</h1><p> Error: You do not have access to this URL.</p></body></html>');
   }
