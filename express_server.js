@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 
-//DATABASES
+//DATABASES ----------------------------------------------------------- >
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -46,7 +46,7 @@ const users = {
   },
 };
 
-//HELLO
+//HELLO ----------------------------------------------------------- >
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -55,12 +55,12 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//HELLO WORLD
+//HELLO WORLD ----------------------------------------------------------- >
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-//REGISTER
+//REGISTER ----------------------------------------------------------- >
 app.get('/register', (req, res) => {
   const user = req.session.user_id;
   const userID = users[user];
@@ -89,23 +89,19 @@ app.post('/register', (req, res) => {
     password: hashedPassword
   };
 
-
   if (email === '' || password === '') {
     return res.status(400).send('<html><body><h1>Error</h1><p>Error, Please enter a valid email and password.</p></body></html>');
   }
-
 
   if (user) {
     return res.status(400).send('<html><body><h1>Error</h1><p>Error, That email is already in use. Please choose a different one.</p></body></html>');
   }
 
-
-
   users[randomID] = userID;
   res.redirect('/login');
 });
 
-//LOGIN
+//LOGIN ----------------------------------------------------------- >
 
 app.get('/login', (req, res) => {
   const user = req.session.user_id;
@@ -136,8 +132,6 @@ app.post('/login', (req, res) => {
     return res.status(403).send('<html><body><h1>Error</h1><p>Error, An account corresponding to that email address could not be found.</p></body></html>');
   }
 
-
-
   if (user) {
     if (!bcrypt.compareSync(password, hashedPassword)) {
       return res.status(403).send('<html><body><h1>Error</h1><p>Error, The password provided does not match.</p></body></html>');
@@ -146,11 +140,9 @@ app.post('/login', (req, res) => {
       res.redirect('/urls');
     }
   }
-
-
 });
 
-//LOGOUT
+//LOGOUT ----------------------------------------------------------- >
 
 app.post('/logout', (req, res) => {
   req.session = null;
@@ -159,7 +151,7 @@ app.post('/logout', (req, res) => {
 
 
 
-//DELETE URLS
+//DELETE URLS ----------------------------------------------------------- >
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   const user = req.session.user_id;
@@ -175,12 +167,11 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     return res.send('<html><body><h1>Error</h1><p>Error, You do not have access to this URL.</p></body></html>');
   }
 
-
   delete urlDatabase[shortURL];
   res.redirect('/urls');
 });
 
-//NEW URLS
+//NEW URLS ----------------------------------------------------------- >
 app.get("/urls/new", (req, res) => {
   const user = req.session.user_id;
   const userID = users[user];
@@ -201,24 +192,24 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(6);
   const userID = req.session.user_id;
 
-
   if (!userID) {
     res.send("<html><body><h1>Error</h1><p>You must be logged in to shorten URLs.</p></body></html>");
     return;
   }
+
   urlDatabase[shortURL] = { longURL, userID };
   res.redirect(`/urls/${shortURL}`);
 });
 
 
-//SHORT URL LINK TO ORIGINAL LONGURL WEBSITE
+//LINK TO LONGURL WEBSITE ----------------------------------------------------------- >
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
-//SHORT URL LINK
+//SHORT URL LINK ----------------------------------------------------------- >
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.session.user_id;
   const shortURL = req.params.shortURL;
@@ -248,33 +239,29 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//EDIT URLS
+//EDIT URLS ----------------------------------------------------------- >
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
   const user = req.session.user_id;
   const userURLs = urlsForUser(user, urlDatabase);
 
-
-
   if (!user) {
     res.send("<html><body><h1>Error</h1><p>Error, You must be logged in to edit URLs.</p></body></html>");
     return;
   }
-
 
   if (!userURLs[shortURL]) {
     res.send("<html><body><h1>Error</h1><p>Error, You do not have access to edit this URL.</p></body></html>");
     return;
   }
 
-
   urlDatabase[shortURL].longURL = newLongURL;
   res.redirect('/urls');
 });
 
 
-//URLS INDEX/TABLE PAGE
+//URLS INDEX/TABLE PAGE ----------------------------------------------------------- >
 app.get('/urls', (req, res) => {
   const user = req.session.user_id;
   const userID = users[user];
@@ -285,8 +272,8 @@ app.get('/urls', (req, res) => {
 
   if (!userID) {
     return res.send('<html><body><h1>Error</h1><p>Error, Login to view your URLs.</p></body></html>');
-
   }
+
   res.render('urls_index', templateVars);
 });
 
