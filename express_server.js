@@ -90,11 +90,11 @@ app.post('/register', (req, res) => {
   };
 
   if (email === '' || password === '') {
-    return res.status(400).send('<html><body><h1>Error</h1><p>Error, Please enter a valid email and password.</p></body></html>');
+    return res.status(400).send('<html><body><h1>Error</h1><p>Error: Please enter a valid email and password.</p></body></html>');
   }
 
   if (user) {
-    return res.status(400).send('<html><body><h1>Error</h1><p>Error, That email is already in use. Please choose a different one.</p></body></html>');
+    return res.status(400).send('<html><body><h1>Error</h1><p>Error: That email is already in use. Please choose a different one.</p></body></html>');
   }
 
   users[randomID] = userID;
@@ -125,16 +125,16 @@ app.post('/login', (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === '' || password === '') {
-    return res.status(400).send('<html><body><h1>Error</h1><p>Error, Please enter a valid email and password.</p></body></html>');
+    return res.status(400).send('<html><body><h1>Error</h1><p>Error: Please enter a valid email and password.</p></body></html>');
   }
 
   if (!user) {
-    return res.status(403).send('<html><body><h1>Error</h1><p>Error, An account corresponding to that email address could not be found.</p></body></html>');
+    return res.status(403).send('<html><body><h1>Error</h1><p>Error: An account corresponding to that email address could not be found.</p></body></html>');
   }
 
   if (user) {
     if (!bcrypt.compareSync(password, hashedPassword)) {
-      return res.status(403).send('<html><body><h1>Error</h1><p>Error, The password provided does not match.</p></body></html>');
+      return res.status(403).send('<html><body><h1>Error</h1><p>Error: The password provided does not match.</p></body></html>');
     } else if (bcrypt.compareSync(password, hashedPassword)) {
       req.session.user_id = user.id;
       res.redirect('/urls');
@@ -159,12 +159,12 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   const userURLs = urlsForUser(user, urlDatabase);
 
   if (!userID) {
-    res.send("<html><body><h1>Error</h1><p>Error, Error: You must be logged in to edit URLs.</p></body></html>");
+    res.send("<html><body><h1>Error</h1><p>Error: You must be logged in to edit URLs.</p></body></html>");
     return;
   }
 
   if (!userURLs[shortURL]) {
-    return res.send('<html><body><h1>Error</h1><p>Error, You do not have access to this URL.</p></body></html>');
+    return res.send('<html><body><h1>Error</h1><p>Error: You do not have access to this URL.</p></body></html>');
   }
 
   delete urlDatabase[shortURL];
@@ -193,7 +193,7 @@ app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
 
   if (!userID) {
-    res.send("<html><body><h1>Error</h1><p>You must be logged in to shorten URLs.</p></body></html>");
+    res.send("<html><body><h1>Error</h1><p>Error: You must be logged in to shorten URLs.</p></body></html>");
     return;
   }
 
@@ -205,6 +205,11 @@ app.post("/urls", (req, res) => {
 //LINK TO LONGURL WEBSITE ----------------------------------------------------------- >
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+
+  if (!urlDatabase[shortURL]) {
+    res.send("<html><body><h1>Error</h1><p>Error: This website does not exist.</p></body></html>");
+  }
+
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
@@ -217,17 +222,17 @@ app.get("/urls/:shortURL", (req, res) => {
   const userURLs = urlsForUser(user, urlDatabase);
 
   if (!urlDatabase[shortURL]) {
-    return res.send("<html><body><h1>Error</h1><p>Error, not a valid shortened URL/id.</p></body></html>");
+    return res.send("<html><body><h1>Error</h1><p>Error: Not a valid shortened URL/id.</p></body></html>");
   }
 
   if (!user) {
-    return res.send("<html><body><h1>Error</h1><p>Error, you must be logged in to access this page.</p></body></html>");
+    return res.send("<html><body><h1>Error</h1><p>Error: You must be logged in to access this page.</p></body></html>");
   }
 
   console.log(userURLs);
   console.log(shortURL);
   if (!userURLs[shortURL]) {
-    return res.send('<html><body><h1>Error</h1><p> Error,You do not have access to this URL.</p></body></html>');
+    return res.send('<html><body><h1>Error</h1><p> Error: You do not have access to this URL.</p></body></html>');
   }
 
   const templateVars = {
@@ -247,12 +252,12 @@ app.post('/urls/:shortURL', (req, res) => {
   const userURLs = urlsForUser(user, urlDatabase);
 
   if (!user) {
-    res.send("<html><body><h1>Error</h1><p>Error, You must be logged in to edit URLs.</p></body></html>");
+    res.send("<html><body><h1>Error</h1><p>Error: You must be logged in to edit URLs.</p></body></html>");
     return;
   }
 
   if (!userURLs[shortURL]) {
-    res.send("<html><body><h1>Error</h1><p>Error, You do not have access to edit this URL.</p></body></html>");
+    res.send("<html><body><h1>Error</h1><p>Error: You do not have access to edit this URL.</p></body></html>");
     return;
   }
 
@@ -271,7 +276,7 @@ app.get('/urls', (req, res) => {
   };
 
   if (!userID) {
-    return res.send('<html><body><h1>Error</h1><p>Error, Login to view your URLs.</p></body></html>');
+    return res.send('<html><body><h1>Error</h1><p>Error: Login to view your URLs.</p></body></html>');
   }
 
   res.render('urls_index', templateVars);
