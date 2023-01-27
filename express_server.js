@@ -60,7 +60,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-//REGISTER ----------------------------------------------------------- >
+//REGISTER ------------------------------------------------------------ >
 app.get('/register', (req, res) => {
   const user = req.session.user_id;
   const userID = users[user];
