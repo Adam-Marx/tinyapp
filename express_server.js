@@ -1,6 +1,6 @@
 const express = require("express");
 const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
 
@@ -13,7 +13,10 @@ const PORT = 8080; // default port 8080
 //MIDDLEWARE
 app.set('view engine', 'ejs');
 app.use(morgan('dev'));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['hgropiumvheoihm984c3q0ymteagnf', 'yu632n9-8vmhuxscgckpmeodgcjhpoieslhx-8']
+}));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -49,10 +52,10 @@ const users = {
 
 
 //COMPARE BY EMAIL HELPER
-const userLookUp = (email) => {
+const userLookUp = (email, database) => {
   let foundUser = null;
-  for (const user in users) {
-    const userID = users[user]
+  for (const user in database) {
+    const userID = database[user]
     if(userID.email === email) {
       return foundUser = userID;
     } 
@@ -71,10 +74,10 @@ const generateRandomString = (length) => {
 };
 
 //SPECIFIC URLS FOR USER HELPER
-function urlsForUser(userID) {
+const urlsForUser = (user) => {
   let filteredUrls = {};
   for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === userID) {
+    if (urlDatabase[shortURL].userID === user) {
       filteredUrls[shortURL] = urlDatabase[shortURL];
     }
   }
@@ -83,7 +86,7 @@ function urlsForUser(userID) {
 
 
 
-
+//HELLO
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -92,14 +95,14 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//BASIC HELLO WORLD
+//HELLO WORLD
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 //REGISTER
 app.get('/register', (req, res) => {
-  const user = req.cookies.user_id
+  const user = req.session.user_id
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -117,7 +120,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const randomID = generateRandomString(4);
-  const user = userLookUp(email);
+  const user = userLookUp(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   const userID = {
@@ -145,7 +148,7 @@ app.post('/register', (req, res) => {
 //LOGIN
 
 app.get('/login', (req, res) => {
-  const user = req.cookies.user_id
+  const user = req.session.user_id
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -162,7 +165,7 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
-    const user = userLookUp(email);
+    const user = userLookUp(email, users);
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     if (email === '' || password === '') {
@@ -179,7 +182,7 @@ app.post('/login', (req, res) => {
       if (!bcrypt.compareSync(password, hashedPassword)) {
         return res.status(403).send('The password provided does not match.')
       } else if (bcrypt.compareSync(password, hashedPassword)) {
-        res.cookie('user_id', user.id);
+        req.session.user_id = user.id
         res.redirect('/urls');
       }
     }
@@ -190,54 +193,17 @@ app.post('/login', (req, res) => {
 //LOGOUT
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/login');
 });
 
-//EDIT URLS
-app.post('/urls/:shortURL', (req, res) => {
-  const shortURL = req.params.shortURL;
-  const newLongURL = req.body.longURL;
-  const user = req.cookies.user_id
-  const userID = users[user]
 
-  if (!userID) {
-    res.send("Error: You must be logged in to edit URLs.");
-    return;
-  }
-
-  if (userID !== urlDatabase[shortURL].userID) {
-    res.send("Error: You do not have access to edit this URL.");
-    return;
-  }
-
-
-  urlDatabase[shortURL].longURL = newLongURL;
-  res.redirect('/urls');
-});
-
-
-//URLS INDEX/TABLE PAGE
-app.get('/urls', (req, res) => {
-  const user = req.cookies.user_id
-  const userID = users[user];
-  const templateVars = {
-    user_id: userID,
-    urls: urlDatabase
-  };
-
-  if (!userID) {
-    return res.send('Login to view your URLs.');
-    
-  }
-  res.render('urls_index', templateVars);
-});
 
 //DELETE URLS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
-  const user = req.cookies.user_id
+  const user = req.session.user_id
   const userID = users[user]
 
   if (!userID) {
@@ -261,7 +227,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 //NEW URLS
 app.get("/urls/new", (req, res) => {
-  const user = req.cookies.user_id
+  const user = req.session.user_id
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -278,7 +244,7 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
-  const userID = req.cookies.user_id
+  const userID = req.session.user_id
 
 
   if (!userID) {
@@ -299,9 +265,10 @@ app.get("/u/:shortURL", (req, res) => {
 
 //SHORT URL LINK
 app.get("/urls/:shortURL", (req, res) => {
-  const user = req.cookies.user_id
+  const user = req.session.user_id
   const shortURL = req.params.shortURL
   const longURL = urlDatabase[shortURL].longURL
+  const userURLs = urlsForUser(user);
 
   if (!urlDatabase[shortURL]) {
     return res.send("<html><body><h1>Error</h1><p>Error, not a valid shortened URL/id.</p></body></html>");
@@ -311,10 +278,9 @@ app.get("/urls/:shortURL", (req, res) => {
   return res.send("<html><body><h1>Error</h1><p>Error, you must be logged in to access this page.</p></body></html>"); 
   }
 
-  const userURLs = urlsForUser(user);
-
+  
   if (!userURLs[shortURL]) {
-    return res.send('You do not have access to one or more URLs.');
+    return res.send('You do not have access to this URLs.');
   }
  
   const templateVars = {
@@ -324,6 +290,48 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: longURL
   };
   res.render("urls_show", templateVars);
+});
+
+//EDIT URLS
+app.post('/urls/:shortURL', (req, res) => {
+  const shortURL = req.params.shortURL;
+  const newLongURL = req.body.longURL;
+  const user = req.session.user_id
+  const userURLs = urlsForUser(user);
+  
+ 
+
+  if (!user) {
+    res.send("Error: You must be logged in to edit URLs.");
+    return;
+  }
+
+
+  if (!userURLs[shortURL]) {
+    res.send("Error: You do not have access to edit this URL.");
+    return;
+  }
+
+
+  urlDatabase[shortURL].longURL = newLongURL;
+  res.redirect('/urls');
+});
+
+
+//URLS INDEX/TABLE PAGE
+app.get('/urls', (req, res) => {
+  const user = req.session.user_id
+  const userID = users[user];
+  const templateVars = {
+    user_id: userID,
+    urls: urlDatabase
+  };
+
+  if (!userID) {
+    return res.send('Login to view your URLs.');
+    
+  }
+  res.render('urls_index', templateVars);
 });
 
 //LISTEN
