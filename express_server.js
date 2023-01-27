@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 
 
@@ -33,8 +34,6 @@ const urlDatabase = {
   },
 };
 
-
-
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -47,6 +46,7 @@ const users = {
     password: "pw2",
   },
 };
+
 
 //COMPARE BY EMAIL HELPER
 const userLookUp = (email) => {
@@ -70,7 +70,7 @@ const generateRandomString = (length) => {
   return result;
 };
 
-//SPECIFIC URLS FOR USER
+//SPECIFIC URLS FOR USER HELPER
 function urlsForUser(userID) {
   let filteredUrls = {};
   for (const shortURL in urlDatabase) {
@@ -118,10 +118,12 @@ app.post('/register', (req, res) => {
   const password = req.body.password;
   const randomID = generateRandomString(4);
   const user = userLookUp(email);
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   const userID = {
     id: randomID,
     email: email,
-    password: password
+    password: hashedPassword
   };
   
 
@@ -133,6 +135,8 @@ app.post('/register', (req, res) => {
   if(user) {
     return res.status(400).send('That email is already in use. Please choose a different one.')
   }
+
+  
 
   users[randomID] = userID;
   res.redirect('/login');
@@ -159,7 +163,8 @@ app.post('/login', (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     const user = userLookUp(email);
-  
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
     if (email === '' || password === '') {
       return res.status(400).send('Please enter a valid email and password.');
     }
@@ -168,14 +173,18 @@ app.post('/login', (req, res) => {
       return res.status(403).send('An account corresponding to that email address could not be found.');
     } 
 
+   
+
     if (user) {
-      if (user.password !== password) {
+      if (!bcrypt.compareSync(password, hashedPassword)) {
         return res.status(403).send('The password provided does not match.')
-      } else if (user.password === password) {
+      } else if (bcrypt.compareSync(password, hashedPassword)) {
         res.cookie('user_id', user.id);
         res.redirect('/urls');
       }
     }
+
+  
 });
 
 //LOGOUT
