@@ -33,4 +33,4 @@ const urlsForUser = (user, database) => {
 
 
 
-module.exports = { userLookUp, generateRandomString, urlsForUser };
+module.exports = { getUserByEmail, generateRandomString, urlsForUser };
