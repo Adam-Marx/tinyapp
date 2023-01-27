@@ -62,7 +62,7 @@ app.get("/hello", (req, res) => {
 
 //REGISTER
 app.get('/register', (req, res) => {
-  const user = req.session.user_id
+  const user = req.session.user_id;
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -70,17 +70,17 @@ app.get('/register', (req, res) => {
   };
 
   if (userID) {
-    res.redirect('/urls')
+    res.redirect('/urls');
   }
 
   res.render('register', templateVars);
-})
+});
 
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const randomID = generateRandomString(4);
-  const user = getUserByEmailUp(email, users);
+  const user = getUserByEmail(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   const userID = {
@@ -91,12 +91,12 @@ app.post('/register', (req, res) => {
 
 
   if (email === '' || password === '') {
-    return res.status(400).send('Please enter a valid email and password.');
+    return res.status(400).send('<html><body><h1>Error</h1><p>Error, Please enter a valid email and password.</p></body></html>');
   }
 
 
   if (user) {
-    return res.status(400).send('That email is already in use. Please choose a different one.')
+    return res.status(400).send('<html><body><h1>Error</h1><p>Error, That email is already in use. Please choose a different one.</p></body></html>');
   }
 
 
@@ -108,7 +108,7 @@ app.post('/register', (req, res) => {
 //LOGIN
 
 app.get('/login', (req, res) => {
-  const user = req.session.user_id
+  const user = req.session.user_id;
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -116,7 +116,7 @@ app.get('/login', (req, res) => {
   };
 
   if (userID) {
-    res.redirect('/urls')
+    res.redirect('/urls');
   }
 
   res.render('login', templateVars);
@@ -125,24 +125,24 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = getUserByEmailUp(email, users);
+  const user = getUserByEmail(email, users);
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === '' || password === '') {
-    return res.status(400).send('Please enter a valid email and password.');
+    return res.status(400).send('<html><body><h1>Error</h1><p>Error, Please enter a valid email and password.</p></body></html>');
   }
 
   if (!user) {
-    return res.status(403).send('An account corresponding to that email address could not be found.');
+    return res.status(403).send('<html><body><h1>Error</h1><p>Error, An account corresponding to that email address could not be found.</p></body></html>');
   }
 
 
 
   if (user) {
     if (!bcrypt.compareSync(password, hashedPassword)) {
-      return res.status(403).send('The password provided does not match.')
+      return res.status(403).send('<html><body><h1>Error</h1><p>Error, The password provided does not match.</p></body></html>');
     } else if (bcrypt.compareSync(password, hashedPassword)) {
-      req.session.user_id = user.id
+      req.session.user_id = user.id;
       res.redirect('/urls');
     }
   }
@@ -162,29 +162,27 @@ app.post('/logout', (req, res) => {
 //DELETE URLS
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
-  const user = req.session.user_id
-  const userID = users[user]
+  const user = req.session.user_id;
+  const userID = users[user];
   const userURLs = urlsForUser(user, urlDatabase);
-  console.log(userURLs);
-  console.log(shortURL);
 
   if (!userID) {
-    res.send("Error: You must be logged in to edit URLs.");
+    res.send("<html><body><h1>Error</h1><p>Error, Error: You must be logged in to edit URLs.</p></body></html>");
     return;
   }
 
   if (!userURLs[shortURL]) {
-    return res.send('You do not have access to this URL.');
+    return res.send('<html><body><h1>Error</h1><p>Error, You do not have access to this URL.</p></body></html>');
   }
 
 
   delete urlDatabase[shortURL];
-  res.redirect('/urls')
+  res.redirect('/urls');
 });
 
 //NEW URLS
 app.get("/urls/new", (req, res) => {
-  const user = req.session.user_id
+  const user = req.session.user_id;
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -201,7 +199,7 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   const longURL = req.body.longURL;
   const shortURL = generateRandomString(6);
-  const userID = req.session.user_id
+  const userID = req.session.user_id;
 
 
   if (!userID) {
@@ -215,16 +213,16 @@ app.post("/urls", (req, res) => {
 
 //SHORT URL LINK TO ORIGINAL LONGURL WEBSITE
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
+  const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
 //SHORT URL LINK
 app.get("/urls/:shortURL", (req, res) => {
-  const user = req.session.user_id
-  const shortURL = req.params.shortURL
-  const longURL = urlDatabase[shortURL].longURL
+  const user = req.session.user_id;
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL;
   const userURLs = urlsForUser(user, urlDatabase);
 
   if (!urlDatabase[shortURL]) {
@@ -238,7 +236,7 @@ app.get("/urls/:shortURL", (req, res) => {
   console.log(userURLs);
   console.log(shortURL);
   if (!userURLs[shortURL]) {
-    return res.send('You do not have access to this URL.');
+    return res.send('<html><body><h1>Error</h1><p> Error,You do not have access to this URL.</p></body></html>');
   }
 
   const templateVars = {
@@ -254,19 +252,19 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.longURL;
-  const user = req.session.user_id
+  const user = req.session.user_id;
   const userURLs = urlsForUser(user, urlDatabase);
 
 
 
   if (!user) {
-    res.send("Error: You must be logged in to edit URLs.");
+    res.send("<html><body><h1>Error</h1><p>Error, You must be logged in to edit URLs.</p></body></html>");
     return;
   }
 
 
   if (!userURLs[shortURL]) {
-    res.send("Error: You do not have access to edit this URL.");
+    res.send("<html><body><h1>Error</h1><p>Error, You do not have access to edit this URL.</p></body></html>");
     return;
   }
 
@@ -278,7 +276,7 @@ app.post('/urls/:shortURL', (req, res) => {
 
 //URLS INDEX/TABLE PAGE
 app.get('/urls', (req, res) => {
-  const user = req.session.user_id
+  const user = req.session.user_id;
   const userID = users[user];
   const templateVars = {
     user_id: userID,
@@ -286,7 +284,7 @@ app.get('/urls', (req, res) => {
   };
 
   if (!userID) {
-    return res.send('Login to view your URLs.');
+    return res.send('<html><body><h1>Error</h1><p>Error, Login to view your URLs.</p></body></html>');
 
   }
   res.render('urls_index', templateVars);
