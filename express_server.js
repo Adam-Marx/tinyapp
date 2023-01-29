@@ -3,6 +3,7 @@ const express = require("express");
 const morgan = require('morgan');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const { urlDatabase, users } = require('./databases')
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -21,35 +22,6 @@ app.use(cookieSession({
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 
-//DATABASES ----------------------------------------------------------- >
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "one@mail.com",
-    password: "pw",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "two@mail2.com",
-    password: "pw2",
-  },
-};
-
-//HELLO ----------------------------------------------------------- >
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -98,7 +70,8 @@ app.post('/register', (req, res) => {
   }
 
   users[randomID] = userID;
-  res.redirect('/login');
+  req.session.user_id = randomID;
+  res.redirect('/urls');
 });
 
 //LOGIN ----------------------------------------------------------- >
@@ -122,9 +95,8 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = getUserByEmail(email, users);
-  const hashedPassword = bcrypt.hashSync(password, 10);
 
-  if (email === '' || password === '') {
+  if (!email || !password) {
     return res.status(400).send('<html><body><h1>Error</h1><p>Error: Please enter a valid email and password.</p></body></html>');
   }
 
@@ -133,9 +105,9 @@ app.post('/login', (req, res) => {
   }
 
   if (user) {
-    if (!bcrypt.compareSync(password, hashedPassword)) {
+    if (!bcrypt.compareSync(password, user.password)) {
       return res.status(403).send('<html><body><h1>Error</h1><p>Error: The password provided does not match.</p></body></html>');
-    } else if (bcrypt.compareSync(password, hashedPassword)) {
+    } else if (bcrypt.compareSync(password, user.password)) {
       req.session.user_id = user.id;
       res.redirect('/urls');
     }
@@ -218,12 +190,15 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.session.user_id;
   const shortURL = req.params.shortURL;
+
+   if (!urlDatabase[shortURL]) {
+    return res.send("<html><body><h1>Error</h1><p>Error: Not a valid shortened URL/id.</p></body></html>");
+  }
+  
   const longURL = urlDatabase[shortURL].longURL;
   const userURLs = urlsForUser(user, urlDatabase);
 
-  if (!urlDatabase[shortURL]) {
-    return res.send("<html><body><h1>Error</h1><p>Error: Not a valid shortened URL/id.</p></body></html>");
-  }
+ 
 
   if (!user) {
     return res.send("<html><body><h1>Error</h1><p>Error: You must be logged in to access this page.</p></body></html>");
@@ -268,9 +243,10 @@ app.post('/urls/:shortURL', (req, res) => {
 app.get('/urls', (req, res) => {
   const user = req.session.user_id;
   const userID = users[user];
+  const filteredURLs = urlsForUser(user, urlDatabase);
   const templateVars = {
     user_id: userID,
-    urls: urlDatabase
+    urls: filteredURLs
   };
 
   if (!userID) {
@@ -278,6 +254,18 @@ app.get('/urls', (req, res) => {
   }
 
   res.render('urls_index', templateVars);
+});
+
+app.get("/", (req, res) => {
+  const user = req.session.user_id;
+
+  if (!user) {
+    res.redirect('/login');
+  }
+
+  if (user) {
+    res.redirect('/login');
+  }
 });
 
 //LISTEN
